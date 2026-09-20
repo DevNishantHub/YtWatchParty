@@ -1,0 +1,649 @@
+/* ============================================================
+   BLACK & WHITE MAXIMALIST THEME
+   Exactly two colors, black and white. No grays, no gradients,
+   no accent hues. Maximalism here means: everything oversized,
+   everything bordered, stacked hard shadows, diagonal stripes,
+   dense visual weight — the opposite of minimal, while staying
+   strictly two-tone.
+
+   Layout rule: the app NEVER scrolls at the page/window level.
+   Every screen is pinned to exactly 100vh and internal regions
+   use flexbox math (flex: 1 on the space-filling element) so
+   things fit by construction, not by hoping aspect ratios add
+   up. Only a few *legitimately unbounded* lists (chat log,
+   participant list) get their own internal scrollbar.
+   ============================================================ */
+
+:root {
+  --black: #000000;
+  --white: #ffffff;
+  --stripes: repeating-linear-gradient(45deg,
+      var(--black) 0px,
+      var(--black) 3px,
+      var(--white) 3px,
+      var(--white) 26px);
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--white);
+  color: var(--black);
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input {
+  font-family: inherit;
+}
+
+/* Base bordered block used everywhere for the brutalist look */
+.home-card,
+.room-header,
+.participants-panel,
+.chat-panel,
+.no-video,
+.player-frame,
+.mode-toggle,
+.home-card form input,
+.video-form input,
+.chat-form input,
+.primary-btn,
+.video-form button,
+.chat-form button,
+.ghost-btn,
+.host-controls button,
+.role-badge {
+  border: 4px solid var(--black);
+  border-radius: 0;
+}
+
+/* ======================= HOME ======================= */
+.home-page {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--stripes);
+}
+
+.home-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--white);
+  padding: 44px;
+  box-shadow:
+    14px 14px 0 var(--black),
+    14px 14px 0 4px var(--black);
+}
+
+.home-card h1 {
+  margin: 0;
+  font-size: 3.2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+
+.subtitle {
+  margin: 16px 0 30px;
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--black);
+  color: var(--white);
+  padding: 10px 14px;
+}
+
+.mode-toggle {
+  display: flex;
+  margin-bottom: 26px;
+  box-shadow: 6px 6px 0 var(--black);
+}
+
+.mode-toggle button {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  background: var(--white);
+  color: var(--black);
+  font-weight: 900;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.mode-toggle button:not(:last-child) {
+  border-right: 4px solid var(--black);
+}
+
+.mode-toggle button.active {
+  background: var(--black);
+  color: var(--white);
+}
+
+.home-card form label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 20px;
+}
+
+.home-card form input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 16px;
+  background: var(--white);
+  color: var(--black);
+  font-size: 1.2rem;
+  font-weight: 800;
+  box-shadow: 4px 4px 0 var(--black);
+}
+
+.home-card form input:focus {
+  outline: none;
+  background: var(--black);
+  color: var(--white);
+}
+
+.home-card form input::placeholder {
+  color: var(--black);
+  opacity: 0.45;
+}
+
+.home-card form input:focus::placeholder {
+  color: var(--white);
+  opacity: 0.55;
+}
+
+.primary-btn {
+  width: 100%;
+  padding: 18px;
+  background: var(--black);
+  color: var(--white);
+  font-weight: 900;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 12px;
+  box-shadow: 8px 8px 0 var(--black), 8px 8px 0 4px var(--black);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.primary-btn:hover:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 4px 4px 0 var(--black), 4px 4px 0 4px var(--black);
+}
+
+.primary-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.error-text {
+  color: var(--white);
+  background: var(--black);
+  padding: 10px 14px;
+  font-weight: 900;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: -6px 0 16px;
+  display: block;
+}
+
+/* ======================= ROOM ======================= */
+/* Fixed to exactly one viewport. Every child height is either
+   flex-shrink:0 (fixed chrome) or flex:1 (fills what's left).
+   Nothing here uses aspect-ratio for the video, on purpose —
+   aspect-ratio sizes from width and can overshoot the height
+   that's actually available, which is what caused the scroll. */
+.room-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  overflow: hidden;
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 32px;
+  border-width: 0 0 5px 0;
+  background: var(--black);
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.room-header h2 {
+  margin: 0 0 8px;
+  font-size: 1.9rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.role-badge {
+  font-size: 0.72rem;
+  padding: 5px 14px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--white);
+  color: var(--black);
+}
+
+/* Only inversion + border weight distinguish roles — no color allowed */
+.role-host {
+  background: var(--white);
+  color: var(--black);
+  border-width: 4px;
+}
+
+.role-moderator {
+  background: var(--black);
+  color: var(--white);
+  border-width: 4px;
+  border-style: double;
+}
+
+.role-participant {
+  background: var(--black);
+  color: var(--white);
+  border-width: 1px;
+  font-weight: 700;
+}
+
+.ghost-btn {
+  background: var(--white);
+  color: var(--black);
+  padding: 11px 20px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ghost-btn:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.ghost-btn.danger {
+  background: var(--black);
+  color: var(--white);
+}
+
+.ghost-btn.danger:hover {
+  background: var(--white);
+  color: var(--black);
+}
+
+.toast-error {
+  background: var(--black);
+  color: var(--white);
+  padding: 12px 32px;
+  font-size: 0.92rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 5px solid var(--black);
+  flex-shrink: 0;
+}
+
+.room-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.room-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Fills exactly the space left after the video-form row below it —
+   no aspect-ratio, so it can never be taller than what's available. */
+.player-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  box-shadow: 12px 12px 0 var(--black), 12px 12px 0 5px var(--black);
+}
+
+.player-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--black);
+  overflow: hidden;
+  border-width: 5px;
+}
+
+.seek-sync-btn {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  z-index: 2;
+  background: var(--white);
+  color: var(--black);
+  border: 4px solid var(--black);
+  padding: 9px 18px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: 5px 5px 0 var(--black);
+}
+
+.seek-sync-btn:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.no-video {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  background: var(--stripes);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-video::before {
+  content: "";
+  display: none;
+}
+
+.no-video p,
+.no-video .hint {
+  background: var(--white);
+  border: 4px solid var(--black);
+  padding: 20px 28px;
+  box-shadow: 8px 8px 0 var(--black);
+}
+
+.no-video p {
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 1.3rem;
+  margin: 0 0 12px;
+}
+
+.no-video .hint {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: none;
+  margin: 0;
+  box-shadow: none;
+  border-width: 3px;
+}
+
+.video-form {
+  display: flex;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.video-form input {
+  flex: 1;
+  padding: 15px;
+  background: var(--white);
+  color: var(--black);
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 4px 4px 0 var(--black);
+}
+
+.video-form input:focus {
+  outline: none;
+  background: var(--black);
+  color: var(--white);
+}
+
+.video-form button {
+  padding: 15px 28px;
+  background: var(--black);
+  color: var(--white);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: 5px 5px 0 var(--black), 5px 5px 0 3px var(--black);
+}
+
+.video-form button:hover {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0 var(--black);
+}
+
+.room-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.participants-panel,
+.chat-panel {
+  background: var(--white);
+  padding: 20px;
+  box-shadow: 10px 10px 0 var(--black), 10px 10px 0 4px var(--black);
+  min-height: 0;
+  border-width: 4px;
+}
+
+.participants-panel {
+  flex-shrink: 0;
+  max-height: 42%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.participants-panel h3,
+.chat-panel h3 {
+  margin: 0 0 16px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--black);
+  color: var(--white);
+  padding: 8px 12px;
+  flex-shrink: 0;
+}
+
+.participants-panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.participants-panel li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+  background: var(--white);
+  border: 3px solid var(--black);
+}
+
+.participants-panel li.me {
+  border-width: 5px;
+}
+
+.p-name {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.host-controls {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.host-controls button {
+  font-size: 0.68rem;
+  padding: 6px 10px;
+  background: var(--white);
+  color: var(--black);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-width: 2px;
+}
+
+.host-controls button:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.host-controls button.danger {
+  background: var(--black);
+  color: var(--white);
+}
+
+.host-controls button.danger:hover {
+  background: var(--white);
+  color: var(--black);
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  min-height: 0;
+  padding-right: 4px;
+}
+
+.chat-msg {
+  border-left: 5px solid var(--black);
+  padding-left: 10px;
+}
+
+.chat-msg strong {
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.chat-form {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.chat-form input {
+  flex: 1;
+  padding: 11px 13px;
+  background: var(--white);
+  color: var(--black);
+  font-size: 0.85rem;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 var(--black);
+}
+
+.chat-form input:focus {
+  outline: none;
+  background: var(--black);
+  color: var(--white);
+}
+
+.chat-form button {
+  padding: 11px 18px;
+  background: var(--black);
+  color: var(--white);
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 var(--black);
+}
+
+.chat-form button:hover {
+  background: var(--white);
+  color: var(--black);
+  border-color: var(--black);
+}
+
+@media (max-width: 860px) {
+  .room-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  .room-sidebar {
+    flex-direction: row;
+  }
+
+  .participants-panel,
+  .chat-panel {
+    max-height: none;
+    flex: 1;
+  }
+
+  .home-card {
+    box-shadow: 8px 8px 0 var(--black);
+  }
+}
