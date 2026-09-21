@@ -4,7 +4,7 @@ Watch YouTube videos in sync with friends. Create a room, share the code, and ev
 play/pause/seek/video-change actions stay perfectly synchronized — with host/moderator/participant
 roles enforced on the backend.
 
-**Live demo:** `<ADD YOUR DEPLOYED URL HERE AFTER DEPLOYING>`
+**Live demo:** `[Live Demo Link](https://ytwatchparty-1.onrender.com/)`
 
 ---
 
